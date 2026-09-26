@@ -7,4 +7,4 @@ const transactionRoutes = Router()
 /**
  * - POST /api/transactions/
  * - Create a new transaction
- */transactionRoutes.post('/', authMiddleware.authMiddleware, transactionController.)
+ */transactionRoutes.post('/', authMiddleware.authMiddleware, transactionController.createTransaction)
