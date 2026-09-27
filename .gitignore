@@ -24,3 +24,5 @@ Thumbs.db
 # Production build
 dist/
 build/
+postman_collection.json
+

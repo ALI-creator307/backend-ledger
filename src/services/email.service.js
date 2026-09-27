@@ -1,37 +1,44 @@
-const { Resend } = require('resend');
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-// Function to send email using Resend
+// Function to send email using Brevo HTTP API
 const sendEmail = async (to, subject, text, html) => {
     try {
-        const { data, error } = await resend.emails.send({
-            from: process.env.EMAIL_FROM || 'Backend Ledger <onboarding@resend.dev>',
-            to: Array.isArray(to) ? to : [to],
-            subject,
-            text,
-            html,
+        const recipientList = Array.isArray(to) ? to : [to];
+        const formattedTo = recipientList.map(email => ({ email }));
+
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'api-key': process.env.BREVO_API_KEY,
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+                sender: { name: 'Backend Ledger', email: process.env.EMAIL_USER || 'asadali719310@gmail.com' },
+                to: formattedTo,
+                subject,
+                textContent: text,
+                htmlContent: html,
+            }),
         });
 
-        if (error) {
-            console.error('Error sending email via Resend:', error);
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.error('Error sending email via Brevo:', data);
             return;
         }
 
-        console.log('Message sent via Resend:', data);
+        console.log('Email sent successfully via Brevo:', data.messageId || data);
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error('Error sending email:', error.message || error);
     }
 };
 
 async function sendRegisterationEmail(userEmail, name) {
-    const subject = 'Welcome to Backend Ledger!'
-    const text = `Hello ${name},\n\nThank you for registerating at Backend Ledger.
-    We're excited to have you on board!\n\nBest regards,\nThe Bacend Ledger team`
-    const html = `<p>Hello ${name},</p><p>\n\nThank you for registerating at Backend Ledger.
-    We're excited to have you on board!</p><p>Best regards,<br>The Bacend Ledger team</p>`
+    const subject = 'Welcome to Backend Ledger!';
+    const text = `Hello ${name},\n\nThank you for registering at Backend Ledger. We're excited to have you on board!\n\nBest regards,\nThe Backend Ledger Team`;
+    const html = `<p>Hello ${name},</p><p>Thank you for registering at Backend Ledger. We're excited to have you on board!</p><p>Best regards,<br>The Backend Ledger Team</p>`;
 
-    await sendEmail(userEmail, subject, text, html)
+    await sendEmail(userEmail, subject, text, html);
 }
 
 async function sendTransactionEmail(userEmail, name, amount, toAccount) {
